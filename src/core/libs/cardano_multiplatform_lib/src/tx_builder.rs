@@ -2537,7 +2537,7 @@ impl TransactionBuilder {
             };
 
             if let Some(_) = &this.redeemers {
-                if force_phase_2_validation.unwrap_or(false) {
+                if if force_phase_2_validation == Some(false) || force_phase_2_validation.is_none() {
                     let updated_redeemers = if native_uplc.is_some() && native_uplc.unwrap() {
                         let mut utxos = TransactionUnspentOutputs(
                             this.inputs.iter().map(|input| input.utxo.clone()).collect(),
