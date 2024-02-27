@@ -4,13 +4,12 @@ import packageJson from "../../package.json" assert { type: "json" };
 
 async function unsafeInstantiate(module: any, url: string) {
   try {
-    await module.instantiate({
-      // Exception for Deno fresh framework
-      url: new URL(
+    await module.default(
+      new URL(
         url,
-        `https://deno.land/x/lucid@${packageJson.version}/src/core/libs/`,
-      ),
-    });
+        `https://deno.land/x/lucides@${packageJson.version}/src/core/libs/`
+      )
+    );
   } catch (_e) {
     // This only ever happens during SSR rendering
   }
@@ -19,11 +18,11 @@ async function unsafeInstantiate(module: any, url: string) {
 await Promise.all([
   unsafeInstantiate(
     C,
-    `cardano_multiplatform_lib/cardano_multiplatform_lib_bg.wasm`,
+    `cardano_multiplatform_lib/cardano_multiplatform_lib_bg.wasm`
   ),
   unsafeInstantiate(
     M,
-    `cardano_message_signing/cardano_message_signing_bg.wasm`,
+    `cardano_message_signing/cardano_message_signing_bg.wasm`
   ),
 ]);
 

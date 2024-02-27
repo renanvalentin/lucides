@@ -2518,6 +2518,7 @@ impl TransactionBuilder {
         collateral_utxos: Option<TransactionUnspentOutputs>,
         collateral_change_address: Option<Address>,
         native_uplc: Option<bool>,
+        force_phase_2_validation: Option<bool>,
     ) -> Result<Transaction, JsError> {
         let this = &mut self.clone();
         this.redeemers = this.collect_redeemers();
@@ -2536,27 +2537,29 @@ impl TransactionBuilder {
             };
 
             if let Some(_) = &this.redeemers {
-                let updated_redeemers = if native_uplc.is_some() && native_uplc.unwrap() {
-                    let mut utxos = TransactionUnspentOutputs(
-                        this.inputs.iter().map(|input| input.utxo.clone()).collect(),
-                    );
-                    if let Some(ref_inputs) = &this.reference_inputs {
-                        for utxo in ref_inputs.0.iter() {
-                            utxos.add(utxo);
-                        }
-                    };
+                if force_phase_2_validation == Some(false) || force_phase_2_validation.is_none() {
+                    let updated_redeemers = if native_uplc.is_some() && native_uplc.unwrap() {
+                        let mut utxos = TransactionUnspentOutputs(
+                            this.inputs.iter().map(|input| input.utxo.clone()).collect(),
+                        );
+                        if let Some(ref_inputs) = &this.reference_inputs {
+                            for utxo in ref_inputs.0.iter() {
+                                utxos.add(utxo);
+                            }
+                        };
 
-                    get_ex_units(
-                        &full_tx,
-                        &utxos,
-                        &this.config.costmdls,
-                        &this.config.max_tx_ex_units,
-                        this.config.slot_config,
-                    )?
-                } else {
-                    get_ex_units_blockfrost(full_tx.clone(), &this.config.blockfrost).await?
-                };
-                this.redeemers = Some(updated_redeemers);
+                        get_ex_units(
+                            &full_tx,
+                            &utxos,
+                            &this.config.costmdls,
+                            &this.config.max_tx_ex_units,
+                            this.config.slot_config,
+                        )?
+                    } else {
+                        get_ex_units_blockfrost(full_tx.clone(), &this.config.blockfrost).await?
+                    };
+                    this.redeemers = Some(updated_redeemers);
+                }
 
                 let pure_ada = |output: &TransactionOutput| -> BigNum {
                     match &output.amount.multiasset {
